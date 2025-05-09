@@ -68,4 +68,4 @@ invalidOperation:
 	j reprompt
 	
 .data
-invalid: .string "Invalid Operation\n"
+invalid: .string "Invalid Operation"
