@@ -11,7 +11,7 @@ main:
 	la a0, operations
 	ecall 
 	
-//prompts:
+
 	
 
 
