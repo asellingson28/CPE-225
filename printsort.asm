@@ -30,7 +30,7 @@ whileread:
 
 endwhilereadstring:
 	beq s2, zero, exit # branches if the counter for entered chars is 0 
-	
+	sb   zero, 0(s0)       
 	li a7, 4
 	la a0, originaltext
 	ecall
@@ -41,45 +41,42 @@ endwhilereadstring:
 	
 sortalpha:
     li   t0, 0       #var pass = 0
-    la   s0, arr       # s0 = base ptr of arr
-    mv   s2, s2 # is this redundant lol
-
+    addi s2, s2, -1
 outer_for:
+    la   s0, arr       # s0 = base ptr of arr
     bgeu t0, s2, endouter_for   # if pass >= length, done
-    lb   a0, 0(s0)     # load arr[0] into t3
-    #li   a7, 11        # print char
-    #ecall
-	
-	
+    add  t3, t0, zero   # t3 = pass 
+    #lb   a0, 0(s0)     # load arr[0] into t3
+    
     # beginning of inner for	
     li t1, 0 # i = 0
-    sub s3, s2, t0  #  n - 1 - pass
-	
-inner_for:
+    sub  t5, s2, t0           # t5 = n-1-pass
+    addi t5, t5, -1           # t5 = n-1-pass-1 
 
-        bgeu t1, s3, endouter_for # i < n - 1 - pass
-	
-	lb t2, 0(s0)
-	lb t3, 1(s0)
-	bgeu t2, t3, swap # arr[i] > arr[i+1]
-	
-	sb t2, 1(s0)
-	sb t3, 0(s0)
-	j repeat_outer_for
+    
+inner_for:
+    add  t4, s0, t1           # t4 = &arr[i]
+    bgtu t1, t5, repeat_outer_for # i < n - 1 - pass
+
+    lb    t2, 0(t4)           # arr[i]
+    lb    t3, 1(t4)           # arr[i+1]
+    bgtu  t2, t3, swap        # swap if arr[i] > arr[i+1]
+
+    j next_i
+
+
 	
 swap:
-mv t4, t2
-mv t2, t3
-mv t3, t4
-j repeat_outer_for
+	sb t2, 1(t4)
+	sb t3, 0(t4)
+	
+next_i:
+    addi  t1, t1, 1             # i++
+    j     inner_for
 
 
-endinner_for:
-addi t1, t1, 1
-j inner_for
 
 repeat_outer_for:
-    addi s0, s0, 1     # advance pointer of arr by one byte (ie index ++)
     addi t0, t0, 1     # for loop ctr
     j    outer_for        # repeat
 
@@ -88,21 +85,22 @@ j printalpha
 
 
 
-printalpha:
-    li   t0, 0       
-    la   s0, arr      
-    mv   s2, s2 
 
-printfor:
-    bgeu t0, s2, exit   # if pass >= length, done
-    lb   a0, 0(s0)     # load arr[0] into t3
-    li   a7, 11        # print char
+printalpha:
+    la a0, alphawordtext
+    li a7, 4
     ecall
 
-endprint_for:
-    addi s0, s0, 1     # advance pointer of arr by one byte (ie index ++)
-    addi t0, t0, 1     # for loop ctr
-    j printfor
+
+    la   s0, arr      
+    mv   a0, s0 
+    
+    li a7, 4
+    ecall
+
+
+
+
 
 exit:
     #la   t0, arr
@@ -123,7 +121,7 @@ ecall
 arr: .space 20
 entertext: .string "\nEnter word: "
 originaltext: .string "Original word: "
-alphawordtext: .string "\n Alphabetized word: "
+alphawordtext: .string "\nAlphabetized word: "
 exitingtext: .string "\nExiting"
 
 
