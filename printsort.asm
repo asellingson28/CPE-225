@@ -1,73 +1,86 @@
 .text
 main:
-	j readstring
-
+    # read word ---------------------------------------------------
+    	la   a0, arr            # base ptr
+	li   a1, 20             # buffer size
+	jal  readstring         #  a0 = len
+	mv   s2, a0             # save length into t2
+    # print original ---------------------------------------------
+	la   a0, originaltext
+	jal printstring
+	la a0, arr
+	jal printstring
+    # bubble sort and alphabetize input
+	mv a1, s2
+	jal bubble_sort
 
 readstring:
-	li a7, 4
-	la a0, entertext
-	ecall
-	la s0, arr 
-	li t1, 10 # new line char
-	li s2, 0 # counter
-	j whileread
-	# while char != enter
-	# read char
-	# add char to full word
-	
+    addi sp, sp, -16
+    sw   ra, 12(sp)        # 4-byte slots when using sw/lw
+    sw   s0, 8(sp)
 
-whileread:
-	# this calls for each char entered to be put in an array
-	li a7, 12
-	ecall
-	
-	beq a0, t1, endwhilereadstring
-	sb a0, 0(s0) # offset into contiguous memory at label arr
-	addi s0, s0, 1 #move offset by 1
-	addi s2, s2, 1 # counter++
-	
-	j whileread
+    mv   s0, a0            # s0 = base pointer (arr) ***before*** you overwrite a0
+    li   t1, 10            # newline sentinel
+    li   t2, 0             # len = 0
 
-endwhilereadstring:
-	beq s2, zero, exit # branches if the counter for entered chars is 0 
-	sb   zero, 0(s0)       
-	li a7, 4
-	la a0, originaltext
-	ecall
-	li a7, 4
-	la a0, arr
-	ecall
-	#j readstring
-	
+prompt:
+    li   a7, 4
+    la   a0, entertext
+    ecall
+
+read_loop:
+    li   a7, 12
+    ecall
+    beq  a0, t1, done_read
+    sb   a0, 0(s0)
+    addi s0, s0, 1
+    addi t2, t2, 1
+    j    read_loop
+
+done_read:
+    sb   zero, 0(s0)       # terminator
+    mv   a0, t2            # counter = length of arr
+
+    # epilogue
+    lw   ra, 12(sp)
+    lw   s0, 8(sp)
+    addi sp, sp, 16
+    ret
+
+bubble_sort:
+# assume
+# a0 - arr
+# a1 - arr len (not -1)
+
+
 sortalpha:
     li   t0, 0       #var pass = 0
-    addi s2, s2, -1
+    addi s2, s2, -1 # remove one from length of array for termination char
+    
 outer_for:
     la   s0, arr       # s0 = base ptr of arr
     bgeu t0, s2, endouter_for   # if pass >= length, done
     add  t3, t0, zero   # t3 = pass 
-    #lb   a0, 0(s0)     # load arr[0] into t3
     
-    # beginning of inner for	
-    li t1, 0 # i = 0
+    # inner for set up
+    li t1, 0		     # i = 0, used as offset
     sub  t5, s2, t0           # t5 = n-1-pass
     addi t5, t5, -1           # t5 = n-1-pass-1 
 
     
 inner_for:
-    add  t4, s0, t1           # t4 = &arr[i]
-    bgtu t1, t5, repeat_outer_for # i < n - 1 - pass
+    add  t4, s0, t1           # t4 = s0 + t1 -> t4 = array start addr + offset
+
+    bgtu t1, t5,next_pass # i < n - 1 - pass
 
     lb    t2, 0(t4)           # arr[i]
     lb    t3, 1(t4)           # arr[i+1]
-    bgtu  t2, t3, swap        # swap if arr[i] > arr[i+1]
+    bgtu  t2, t3, swap        # swap if arr[i] > arr[i+1], skip if not out of order
 
     j next_i
 
-
-	
 swap:
-	sb t2, 1(t4)
+	sb t2, 1(t4) # reverses order of the bytes
 	sb t3, 0(t4)
 	
 next_i:
@@ -76,7 +89,7 @@ next_i:
 
 
 
-repeat_outer_for:
+next_pass:
     addi t0, t0, 1     # for loop ctr
     j    outer_for        # repeat
 
@@ -99,6 +112,8 @@ printalpha:
     ecall
 
 
+    j main
+
 
 
 
@@ -115,7 +130,11 @@ ecall
 li a7, 10
 ecall
 
-
+printstring:
+# assumes value is in a0
+li a7, 4
+ecall
+ret
 
 .data
 arr: .space 20
@@ -124,6 +143,7 @@ originaltext: .string "Original word: "
 alphawordtext: .string "\nAlphabetized word: "
 exitingtext: .string "\nExiting"
 
+#---
 
 # Bubble Sort in C
 
