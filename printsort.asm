@@ -13,6 +13,9 @@ main:
     # bubble sort and alphabetize input
 	mv a1, s2
 	jal bubble_sort
+	lw a0, arr
+	jal printalpha
+	
 
 readstring:
     addi sp, sp, -16
@@ -41,6 +44,7 @@ done_read:
     sb   zero, 0(s0)       # terminator
     mv   a0, t2            # counter = length of arr
 
+    beq a0, zero, exit
     # epilogue
     lw   ra, 12(sp)
     lw   s0, 8(sp)
@@ -51,9 +55,8 @@ bubble_sort:
 # assume
 # a0 - arr
 # a1 - arr len (not -1)
-
-
-sortalpha:
+    addi sp, sp, -16
+    sw ra, 8(sp) # save caller
     li   t0, 0       #var pass = 0
     addi s2, s2, -1 # remove one from length of array for termination char
     
@@ -94,7 +97,8 @@ next_pass:
     j    outer_for        # repeat
 
 endouter_for:
-j printalpha
+    lw ra, 8(sp)
+    ret
 
 
 
@@ -141,7 +145,7 @@ arr: .space 20
 entertext: .string "\nEnter word: "
 originaltext: .string "Original word: "
 alphawordtext: .string "\nAlphabetized word: "
-exitingtext: .string "\nExiting"
+exitingtext: .string "Exiting"
 
 #---
 
