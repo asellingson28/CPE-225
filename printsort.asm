@@ -1,5 +1,5 @@
 .text
-main:
+main: # main gets looped, bad practice but uses ret and ra correctly
     # read word ---------------------------------------------------
     	la   a0, arr            # base ptr
 	li   a1, 20             # buffer size
@@ -100,9 +100,6 @@ endouter_for:
     lw ra, 8(sp)
     ret
 
-
-
-
 printalpha:
     la a0, alphawordtext
     li a7, 4
@@ -115,10 +112,7 @@ printalpha:
     li a7, 4
     ecall
 
-
     j main
-
-
 
 
 exit:
