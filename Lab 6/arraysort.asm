@@ -13,15 +13,22 @@ selectionSort:
     # // and swap it with `arr[i]`  */
     
 #    int j;
-# defined below
-
 #    int min = i; # min = s1
-mv s1, a1
-addi sp, sp, -16     # Make space on stack
-sw ra, 12(sp)        # Save return address
-sw s0, 8(sp)         # save s0
-sw s1, 4(sp)         # save s1
-mv s2, s1 # original i for use in swap
+# PROLOGUE
+
+# allocate memory for preserving stack ordered allocations
+    addi  sp, sp, -20
+    sw    ra, 16(sp)
+    sw    s0, 12(sp)
+    sw    s1,  8(sp)
+    sw    s2,  4(sp)
+    sw    s3,  0(sp)
+
+    mv    s1,  a1      #  initialize min = i
+    mv    s2,  a2      #  save n
+    mv    s3,  a1      #  save original i
+
+
 #    for (j = i + 1; j < n; j++)    {
 for:
 
@@ -37,8 +44,8 @@ bgeu s0, a2, endfor
 #        /* if `arr[j]` is less, then it is the new minimum */
 #        if (arr[j] < arr[min]) {
 
-# define arrmin
-# defmine arrj
+# define arr[min]
+# define arr[j]
 
 slli t3, s0, 2        # Multiply j by 4
 add t3, a0, t3	     # t3 = &arr[j]
@@ -68,18 +75,26 @@ endfor:
 # min is in s1 at the end of this for loop
 
     mv    a1, s1      # a1 = min
-    mv    a2, s2      # a2 = original i
+    mv    a2, s3      # a2 = original i
     jal   swap
+
+    mv    a2, s2      # restore n for the recursive test
+
 
 #caller teardown for swap goes here (if needed).
  
 #    if (i + 1 < n) {
 if2:
-    mv    t6, s2       # t6 = original i
-    addi  t6, t6, 1    # t6 = i+1
-    bgeu  t6, a2, endif2
-    mv    a1, t6       # a1 = new i
+
+   mv   t6, s3         # t6 = original i
+   addi t6, t6, 1      # t6 = i+1
+    bge   t6, s2, endif2    # if i+1 ≥ n  skip recursion
+    mv    a1, t6          # a1 = i+1
+
     jal   selectionSort
+    # a1 = new i
+
+
 
 #        selectionSort(arr, i + 1, n);
 #caller setup and subroutine call for selectionSort goes here.
@@ -90,24 +105,27 @@ if2:
 
 #    }
 endif2:
+# stop recurse
 
-	
 # callee teardown goes here
-lw ra, 12(sp)        # Restor e ra
-lw s0, 8(sp)         # Restore s0 
-lw s1, 4(sp)         # Restore s1 
-addi sp, sp, 16     
-
-ret # goes back to whereever it was called from recursively
+# EPILOGUE
+    lw    ra, 16(sp)
+    lw    s0, 12(sp)
+    lw    s1,  8(sp)
+    lw    s2,  4(sp)
+    lw    s3,  0(sp)
+    addi  sp, sp,  20
+   ret
+ # goes back to whereever it was called from recursively
 #}
 
  
 
 #/* Utility function to swap values at two indices in an array*/
 #void swap(int arr[], int i, int j) {
-# arr -> a0
-# i = min -> a3
-# j ->  a1
+
+
+#   a0 = arr, a1 = i, a2 = j
 swap: 
 # swap callee setup goes here
 # FROM PRINTSORT
@@ -137,10 +155,9 @@ swap:
 
   ret
 
-
-
 # swap callee teardown goes here
 
-
-ret
 #}
+
+.data
+helper: .string "Test"
