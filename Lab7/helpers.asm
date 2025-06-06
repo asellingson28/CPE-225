@@ -1,4 +1,4 @@
-.globl plot
+.globl plot, abs
 
 .text
 
@@ -22,5 +22,7 @@ plot:
 
 
 abs:
-
-
+    bge a0, zero, end_abs   
+    neg a0, a0  
+end_abs:
+ret
