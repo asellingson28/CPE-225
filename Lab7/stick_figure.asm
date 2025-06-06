@@ -1,9 +1,7 @@
 .text
 main:
 
-
-
-
+setup:
 li a0, 0
 li a1, 0
 li a2, 0xFFFFFF # load hex color value - colr	
